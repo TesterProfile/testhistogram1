@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  position: relative;
+  width: 960px;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: steelblue;
+  fill-opacity: .9;
+}
+    
+.x.axis path {
+  display: none;
+}
+
+label {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+/*The styling I used was specifically to allow space for the name label on the bottom left side of the chart*/
+
+div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 60px;					
+    height: 28px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightgrey;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+} 
+/*This formats and styles the div for the tool tip. */
+</style>
+<svg class="chart"></svg>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+//Access on the web https://my.up.ist.psu.edu/d3_histograms_leifgreiss_ist402.html
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+    
+    var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1, 1);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+//This creates the tooltip div that will appear.
+    
+var chart = d3.select(".chart")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1, 1);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var bardata = [];
+
+d3.tsv("histogramdata.tsv", type, function(error, data) {
+
+    
+    x.domain(data.map(function(d) { return d.name; }));
+    y.domain([0, d3.max(data, function(d) { return d.count; })]);
+
+    chart.append("g")
+	   .attr("class", "axis")
+	   .attr("transform", "translate(0," + height + ")")
+	   .call(xAxis)
+    .append("text")
+	  .attr("text-anchor", "bottom")
+	  .text("Name");
+    //This allows the "Name" label to appear along the bottom of the x-axis
+    
+    chart.append("g")
+	   .attr("class", "axis")
+	   .call(yAxis)
+       .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("count");
+    //This allows the "Value" label to appear along the side of the y-axis.
+    
+    chart.selectAll(".bar")
+	   .data(data)
+	   .enter().append("rect")
+	   .attr("class", "bar")
+	   .attr("x", function(d) { return x(d.name); }) 
+	   .attr("y", function(d) { return y(d.count); })
+	   .attr("height", function(d) { return height - y(d.count); })
+	   .attr("width", x.rangeBand()) 
+        .on("mouseover", function(d) {		
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div	.html(d.name + "<br/>" + d.count)	
+                .style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px");})
+    //Creates the mouseover function that spawns the tooltip
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);})
+    //Creates mouseout function that makes the tooltip disappear
+       
+    
+bardata = data;
+});
+    
+//Ultimately I could not figure out how exactly to set up the sorting by clicking on the x or y axis. While I understood the concept and at some level understood that I would need to create a mousedown or click function associated with  clicking on specific coordinates. I do not understand how to phrase the function and event. While I understand how it would work if clicking a button caused the sorting I do not understand how to translate that to clicking on the y or x axis. 
+/*d3.select("svg")
+	.on("mousedown", function() {
+	var x =d3.mouse(this)[0];
+	var y = d3.mouse(this)[1];
+	if(x<=40 || y >=460)
+    bardata.sort(function(a,b) {return d3.ascending(a.value, b.value)})};*/
+        
+/*d3.select(".bar")
+    .on("mousedown")
+    .sort(function(a,b) {return d3.});*/
+
+function type(d) {
+    d.count = +d.count; 
+    return d;
+}
+</script>
